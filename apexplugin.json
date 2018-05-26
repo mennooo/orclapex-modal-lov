@@ -1,0 +1,35 @@
+{
+  "name" : "Modal LOV",
+  "version" : "1.0",
+  "description" : "A modal LOV item plug-in for Oracle APEX",
+  "keywords" : ["item", "LOV", "modal"],
+  "homepage" : "https://github.com/mennooo/orclapex-modal-lov",
+  "bugs" : {
+    "url" : "https://github.com/mennooo/orclapex-modal-lov/issues",
+    "email" : "me@menn.ooo"
+  },
+  "license" : "MIT",
+  "author" : {
+    "name" : "Menno Hoogendijk",
+    "email" : "me@menn.ooo",
+    "url" : "http://menn.ooo/",
+    "twitter" : "mennooo",
+    "donationUrl" : "https://www.paypal.me/mennooo"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "https://github.com/mennooo/orclapex-modal-lov.git"
+  },
+  "oracle" : {
+    "versions" : ["11.2.0.1", "12.1.0.1", "12.2.0.0"],
+    "apex" : {
+      "versions" : ["5.1.0", "18.1.0"],
+      "plugin" : {
+        "internalName" : "MHO.MODAL_LOV",
+        "type" : "item",
+        "demo" : "https://apex.oracle.com/pls/apex/f?p=115922:16",
+        "previewImage" : "https://raw.githubusercontent.com/mennooo/orclapex-modal-lov/master/preview.gif"
+      }
+    }
+  }
+}

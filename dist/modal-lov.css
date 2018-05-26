@@ -14,34 +14,42 @@
 }
 .ui-dialog.modal-xs,
 .ui-dialog.modal-sm {
-  width: 30vw !important;
+  width: 480px !important;
 }
 .ui-dialog.modal-l,
 .ui-dialog.modal-md {
-  width: 60vw !important;
+  width: 600px !important;
 }
 .ui-dialog.modal-xl,
 .ui-dialog.modal-lg {
-  width: 80vw !important;
+  width: 720px !important;
 }
-.t-Form-inputContainer input.modal-lov-item {
+.modal-lov .u-Processing.u-Processing--inline {
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+.modal-lov .t-Form-inputContainer input.modal-lov-item {
   margin: 0;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   padding-right: 35px !important;
 }
-.modal-lov-button {
+.modal-lov .modal-lov-button {
   -webkit-order: 3;
   -ms-flex-order: 3;
   order: 3;
 }
-.modal-lov-table .t-Report-cell {
+.modal-lov .modal-lov-table .t-Report-cell {
   cursor: pointer;
 }
-.modal-lov-table .hover .t-Report-cell {
+.modal-lov .modal-lov-table .hover .t-Report-cell {
   background-color: inherit!important;
 }
-.modal-lov-table .mark .t-Report-cell {
+.modal-lov .modal-lov-table .mark .t-Report-cell {
   background-color: inherit!important;
 }
 .a-GV-columnItem .apex-item-group {

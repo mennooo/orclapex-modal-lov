@@ -1,3 +1,4 @@
+// Styling for the clear search icon
 .t-Form-inputContainer .search-clear, .a-GV-columnItem .search-clear {
   order: 3;
   right: 20px;
@@ -6,54 +7,63 @@
   margin-right: -14px;
   font-size: 14px;
   cursor: pointer;
-  // color: @gray-light;
   z-index: 1;
 }
 
+// Styling for Large items
 .t-Form--large .t-Form-inputContainer .search-clear {
   padding: 9px;
 }
 
+// Styling for the modal LOV dialog
 .ui-dialog {
   &.modal-xs,
   &.modal-sm {
-    width: 30vw !important;
+    width: 480px !important;
   }
   &.modal-l,
   &.modal-md {
-    width: 60vw !important;
+    width: 600px !important;
   }
   &.modal-xl,
   &.modal-lg {
-    width: 80vw !important;
+    width: 720px !important;
   }
 }
 
-
-.t-Form-inputContainer input.modal-lov-item {
-  margin: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  padding-right: 35px !important;
-}
-.modal-lov-button {
-  -webkit-order: 3;
-  -ms-flex-order: 3;
-  order: 3; 
-}
-
-.modal-lov-table {
-  .t-Report-cell {
-    cursor: pointer;
+// Styling for the modal LOV
+.modal-lov {
+  .u-Processing.u-Processing--inline {
+    margin: auto;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
   }
-  .hover .t-Report-cell {
-    background-color: inherit!important;
+  .t-Form-inputContainer input.modal-lov-item {
+    margin: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-right: 35px !important;
   }
-  .mark .t-Report-cell {
-    background-color: inherit!important;
+  .modal-lov-button {
+    -webkit-order: 3;
+    -ms-flex-order: 3;
+    order: 3; 
+  }
+
+  .modal-lov-table {
+    .t-Report-cell {
+      cursor: pointer;
+    }
+    .hover .t-Report-cell {
+      background-color: inherit!important;
+    }
+    .mark .t-Report-cell {
+      background-color: inherit!important;
+    }
   }
 }
 
+// Support for Interactive Grid
 .a-GV-columnItem .apex-item-group {
   width: 100%;
 }

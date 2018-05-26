@@ -36,13 +36,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _templateData: {},
     _lastSearchTerm: '',
 
-    _overlayLoader: {
-      options: {
-        'overlayClass': 'region-overlay-loader',
-        'refreshSelector': '.apex-refresh-loader',
-        'ignoreSelector': '.apex-ignore-refresh-loader'
-      }
-    },
+    _modalDialog$: null,
 
     // Combination of number, char and space, arrow keys
     _validSearchKeys: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // numbers
@@ -65,9 +59,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // Trigger event on click input group addon button (magnifier glass)
       self._triggerLOVOnButton()
 
-      // Set pagination actions
-      self._initPagination()
-
       // Clear text when clear icon is clicked
       self._initClearInput()
 
@@ -80,6 +71,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _onOpenDialog: function (modal, options) {
       var self = options.widget
+      self._modalDialog$ = window.top.$(modal)
       // Focus on search field in LOV
       window.top.$('#' + self.options.searchField).focus()
       // Remove validation results
@@ -89,15 +81,17 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         window.top.$s(self.options.searchField, apex.item(self.options.displayItem).getValue())
       }
       // Add class on hover
-      self._onRowHover(modal)
+      self._onRowHover()
       // selectInitialRow
-      self._selectInitialRow(modal)
+      self._selectInitialRow()
       // Set action when a row is selected
-      self._onRowSelected(modal)
+      self._onRowSelected()
       // Navigate on arrow keys trough LOV
-      self._initKeyboardNavigation(modal)
+      self._initKeyboardNavigation()
       // Set search action
       self._initSearch()
+      // Set pagination actions
+      self._initPagination()
     },
 
     _onCloseDialog: function (modal, options) {
@@ -110,11 +104,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // in the end, this should keep things intact as they were
       options.widget._destroy(modal)
       options.widget._triggerLOVOnDisplay()
-      // why the following?
-      // window.top.$(window.top.document).trigger({
-      //   type: 'keypress',
-      //   which: 9
-      // })
     },
 
     _onLoad: function (options) {
@@ -140,39 +129,40 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         height: $modalRegion.find('.t-Report-wrap').height() + 150, // + dialog button height
         width: $modalRegion.find('.modal-lov-table > table').width(),
         closeText: apex.lang.getMessage('APEX.DIALOG.CLOSE'),
+        draggable: true,
         modal: true,
         resizable: true,
         closeOnEscape: true,
         dialogClass: 'ui-dialog--apex ' + dialogClass,
         open: function (modal) {
-          apex.util.getTopApex().navigation.beginFreezeScroll()
+          // remove opener because it makes the page scroll down for IG
+          window.top.$(this).data('uiDialog').opener = window.top.$()
           self._onOpenDialog(this, options)
         },
-        close: function (modal) {
+        beforeClose: function () {
           self._onCloseDialog(this, options)
-          apex.util.getTopApex().navigation.endFreezeScroll()
+          // Prevent scrolling down on modal close
+          document.activeElement.blur()
         }
       })
     },
 
-    _onReload: function (options) {
-      var self = options.widget
+    _onReload: function () {
+      var self = this
       // This function is executed after a search
       var reportHtml = Handlebars.partials.report(self._templateData)
       var paginationHtml = Handlebars.partials.pagination(self._templateData)
 
       // Get current modal-lov table
-      var modalLOVTable = window.top.$(window.top.document).find('#' + self.options.id + ' .modal-lov-table')
-      var pagination = window.top.$(window.top.document).find('#' + self.options.id + ' .t-ButtonRegion-wrap')
+      var modalLOVTable = self._modalDialog$.find('.modal-lov-table')
+      var pagination = self._modalDialog$.find('.t-ButtonRegion-wrap')
 
       // Replace report with new data
       $(modalLOVTable).replaceWith(reportHtml)
       $(pagination).html(paginationHtml)
-
-      // Get new modal-lov table
-      modalLOVTable = window.top.$(window.top.document).find('#' + self.options.id + ' .modal-lov-table')
+      
       // selectInitialRow in new modal-lov table
-      self._selectInitialRow(modalLOVTable)
+      self._selectInitialRow()
     },
 
     _getTemplateData: function () {
@@ -205,7 +195,9 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           firstRow: 0,
           lastRow: 0,
           allowPrev: false,
-          allowNext: false
+          allowNext: false,
+          previous: apex.lang.getMessage('APEX.GV.PREV_PAGE'),
+          next: apex.lang.getMessage('APEX.GV.NEXT_PAGE')
         }
       }
 
@@ -303,9 +295,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       $(window.top.document).off('keydown')
       $(window.top.document).off('keyup', '#' + self.options.searchField)
       $('#' + self.options.displayItem).off('keyup')
-      window.top.$(modal).remove()
-    // Enable escape key for other modals
-    // window.top.$('.modal').data('bs.modal').options.keyboard = true
+      self._modalDialog$.remove()
     },
 
     _getData: function (options, handler) {
@@ -324,8 +314,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // Store last searchTerm
       self._lastSearchTerm = searchTerm
 
-      self.modalSpinner = self._showOverlayLoader(window.top.$('#' + self.options.id).find('.modal-lov-table'))
-
       apex.server.plugin(self.options.ajaxIdentifier, {
         x01: 'GET_DATA',
         x02: searchTerm, // searchterm
@@ -334,18 +322,15 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       }, {
         target: $('#' + self.options.returnItem),
         dataType: 'json',
+        loadingIndicator: $.proxy(options.loadingIndicator, self),
         success: function (pData) {
-          self._hideOverlayLoader(self.modalSpinner)
+          // self._hideOverlayLoader(self.modalSpinner)
           self.options.dataSource = pData
           self._templateData = self._getTemplateData()
           handler({
             widget: self,
             fillSearchText: settings.fillSearchText
           })
-        },
-        error: function (pData) {
-          self._hideOverlayLoader(self.modalSpinner)
-          apex.message.alert(pData.responseText)
         }
       })
     },
@@ -355,8 +340,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // if the lastSearchTerm is not equal to the current searchTerm, then search immediate
       if (self._lastSearchTerm !== window.top.$v(self.options.searchField)) {
         self._getData({
-          firstRow: 1
-        }, self._onReload)
+          firstRow: 1,
+          loadingIndicator: self._modalLoadingIndicator
+        }, function () {
+          self._onReload()
+        })
       }
 
       // Action when user inputs search text
@@ -374,8 +362,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
         srcEl.delayTimer = setTimeout(function () {
           self._getData({
-            firstRow: 1
-          }, self._onReload)
+            firstRow: 1,
+            loadingIndicator: self._modalLoadingIndicator
+          }, function () {
+            self._onReload()
+          })
         }, 350)
       })
     },
@@ -392,15 +383,21 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // Previous set
       window.top.$(window.top.document).on('click', prevSelector, function (e) {
         self._getData({
-          firstRow: self._getFirstRownumPrevSet()
-        }, self._onReload)
+          firstRow: self._getFirstRownumPrevSet(),
+          loadingIndicator: self._modalLoadingIndicator
+        }, function () {
+          self._onReload()
+        })
       })
 
       // Next set
       window.top.$(window.top.document).on('click', nextSelector, function (e) {
         self._getData({
-          firstRow: self._getFirstRownumNextSet()
-        }, self._onReload)
+          firstRow: self._getFirstRownumNextSet(),
+          loadingIndicator: self._modalLoadingIndicator
+        }, function () {
+          self._onReload()
+        })
       })
     },
 
@@ -426,16 +423,13 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       // Remove previous modal-lov region
       $('#' + self.options.id, document).remove()
-      // Show loader
-      self.pageSpinner = self._showOverlayLoader($('#' + self.options.returnItem).closest('form'))
-      // Load data and open modal modal-lov region
+
       self._getData({
         firstRow: 1,
         searchTerm: options.searchTerm,
-        fillSearchText: options.fillSearchText
+        fillSearchText: options.fillSearchText,
+        loadingIndicator: self._itemLoadingIndicator
       }, self._onLoad)
-
-      // $('#' + self.options.displayItem).trigger('mho:modallov:open')
     },
 
     _triggerLOVOnDisplay: function () {
@@ -468,9 +462,9 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       })
     },
 
-    _onRowHover: function (modal) {
+    _onRowHover: function () {
       var self = this
-      window.top.$(modal).on('mouseenter mouseleave', '.t-Report-report tr', function () {
+      self._modalDialog$.on('mouseenter mouseleave', '.t-Report-report tr', function () {
         if ($(this).hasClass('mark')) {
           return
         }
@@ -478,25 +472,25 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       })
     },
 
-    _selectInitialRow: function (modal) {
+    _selectInitialRow: function () {
       var self = this
       // If current item in LOV then select that row
       // Else select first row of report
-      var $curRow = window.top.$(modal).find('.t-Report-report tr[data-return="' + apex.item(self.options.returnItem).getValue() + '"]')
+      var $curRow = self._modalDialog$.find('.t-Report-report tr[data-return="' + apex.item(self.options.returnItem).getValue() + '"]')
       if ($curRow.length > 0) {
         $curRow.addClass('mark ' + self.options.markClasses)
       } else {
-        window.top.$(modal).find('.t-Report-report tr[data-return]').first().addClass('mark ' + self.options.markClasses)
+        self._modalDialog$.find('.t-Report-report tr[data-return]').first().addClass('mark ' + self.options.markClasses)
       }
     },
 
-    _initKeyboardNavigation: function (modal) {
+    _initKeyboardNavigation: function () {
       var self = this
 
       function navigate (direction, event) {
         event.stopImmediatePropagation()
         event.preventDefault()
-        var currentRow = window.top.$(modal).find('.t-Report-report tr.mark')
+        var currentRow = self._modalDialog$.find('.t-Report-report tr.mark')
         switch (direction) {
           case 'up':
             if ($(currentRow).prev().is('.t-Report-report tr')) {
@@ -523,8 +517,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
             navigate('down', e)
             break
           case 13: // ENTER
-            var currentRow = window.top.$(modal).find('.t-Report-report tr.mark').first()
-            self._returnSelectedRow(currentRow, modal)
+            var currentRow = self._modalDialog$.find('.t-Report-report tr.mark').first()
+            self._returnSelectedRow(currentRow)
             break
           case 33: // Page up
             e.preventDefault()
@@ -538,7 +532,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       })
     },
 
-    _returnSelectedRow: function ($row, modal) {
+    _returnSelectedRow: function ($row) {
       var self = this
       apex.item(self.options.returnItem).setValue($row.data('return'), $row.data('display'))
       // Also add the display value as data attr on the hidden return item. This is used for validation.
@@ -550,20 +544,20 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         data[$(val).attr('headers')] = $(val).html()
       })
 
-      // $('#' + self.options.displayItem).trigger('mho:modallov:afterselect', data)
-
       // Finally hide the modal
-      window.top.$(modal).dialog('close')
+      self._modalDialog$.dialog('close')
 
-      // And focus on input or IG
-      $('#' + self.options.displayItem).focus()
+      // And focus on input but not for IG column item
+      if (!$('#' + self.options.displayItem).parent().hasClass('a-GV-columnItem')) {
+        $('#' + self.options.displayItem).focus()
+      }
     },
 
-    _onRowSelected: function (modal) {
+    _onRowSelected: function () {
       var self = this
       // Action when row is clicked
-      window.top.$(modal).on('click', '.modal-lov-table .t-Report-report tr', function (e) {
-        self._returnSelectedRow(window.top.$(this), modal)
+      self._modalDialog$.on('click', '.modal-lov-table .t-Report-report tr', function (e) {
+        self._returnSelectedRow(window.top.$(this))
       })
     },
 
@@ -579,8 +573,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       $('#' + self.options.returnItem).data('display', '')
       self._removeValidation()
       $('#' + self.options.displayItem).focus()
-
-    // $('#' + self.options.displayItem).trigger('mho:modallov:cleared')
     },
 
     _initClearInput: function () {
@@ -591,29 +583,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       })
     },
 
-    _showOverlayLoader: function (target) {
-      if (target.length > 0) {
-        return apex.util.showSpinner(target)
-      }
-    },
-
     _hideOverlayLoader: function (spinner) {
       if (spinner) {
         spinner.remove()
       }
     },
-
-    // _getHashCode: function (text) {
-    //   var hash = 0
-    //   var char
-    //   if (text.length === 0) return hash
-    //   for (var i = 0; i < text.length; i++) {
-    //     char = text.charCodeAt(i)
-    //     hash = ((hash << 5) - hash) + char
-    //     hash = hash & hash // Convert to 32bit integer
-    //   }
-    //   return hash
-    // },
 
     _initCascadingLOVs: function () {
       var self = this
@@ -629,6 +603,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         x02: pValue // returnVal
       }, {
         dataType: 'json',
+        loadingIndicator: $.proxy(self._itemLoadingIndicator, self),
         success: function (pData) {
           $('#' + self.options.returnItem).val(pData.returnValue)
           $('#' + self.options.displayItem).val(pData.displayValue)
@@ -666,6 +641,16 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       apex.item(self.options.returnItem).callbacks.displayValueFor = function () {
         return $('#' + self.options.displayItem).val()
       }
+    },
+
+    _itemLoadingIndicator: function (loadingIndicator) {
+      $('#' + this.options.searchButton).after(loadingIndicator)
+      return loadingIndicator
+    },
+
+    _modalLoadingIndicator: function (loadingIndicator) {
+      this._modalDialog$.prepend(loadingIndicator)
+      return loadingIndicator
     }
   })
 })(apex.jQuery, window)
