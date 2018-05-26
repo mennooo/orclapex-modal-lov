@@ -34,6 +34,26 @@ https://apex.oracle.com/pls/apex/f?p=115922:16
 * Change Modal LOV title
 * Change no-data-found message
 
+## How to use
+The plug-in uses the **List Of Values** attribute as source for the Modal LOV. In almost all scenarios, you will use a `Shared Component List Of Values` or a locally defined query. The maximum number of columns for a  `Shared Component List Of Values` is two (display & return). If you want to show extra columns in the Modal LOV, choose `SQL Query` and make sure to have at least three columns.
+
+### SQL Query as LOV
+The display and return column will not be shown in the Modal LOV. Make sure to add extra columns. Here is an example.
+For nices column headings, make sure to add an alias to each column which is displayed.
+```sql
+select id r
+     , name d
+     , name "Name"
+     , country "Country"
+     , from_yr "Born in"
+  from eba_demo_ig_people
+ order by name;
+```
+
+The settings could be like this:
+
+<img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/images/settings.png" width="700px">
+
 ## Settings
 You can find a detailed explanation in the help section of the plugin.
 
