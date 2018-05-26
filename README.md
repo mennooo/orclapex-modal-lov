@@ -14,6 +14,13 @@ https://apex.oracle.com/pls/apex/f?p=115922:16
 
 ## Blog
 
+## How to install
+Download this repository and import the plug-in into your application from this location:
+
+`plugin/item_type_plugin_mho_modal_lov.sql`
+
+Additionally you can put the CSS, JavaScript on your web server and the PL/SQL code inside a package for better performance.
+
 ## Features
 * Start typing in the page item to open the Modal LOV
 * Open the Modal LOV by clicking the search icon
