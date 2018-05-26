@@ -52,7 +52,10 @@ select id r
 
 The settings could be like this:
 
-<img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/images/settings.png" width="700px">
+<img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/images/settings.PNG" width="700px">
+
+### Shared Component as LOV
+The plug-in uses the item label as column heading for the display column in the Modal LOV. The return item is not displayed.
 
 ## Settings
 You can find a detailed explanation in the help section of the plugin.
