@@ -1,13 +1,26 @@
 // Styling for the clear search icon
-.t-Form-inputContainer .search-clear, .a-GV-columnItem .search-clear {
-  order: 3;
-  right: 20px;
-  align-self: center;
-  height: 14px;
-  margin-right: -14px;
-  font-size: 14px;
-  cursor: pointer;
-  z-index: 1;
+.t-Form-inputContainer, .a-GV-columnItem {
+  .search-clear {
+    order: 3;
+    right: 20px;
+    align-self: center;
+    height: 14px;
+    margin-right: -14px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1;
+  }
+}
+.a-GV-columnItem {
+  .search-clear {
+    // we need more room in the IG for the search button
+    right: 20px + 32px;
+  }
+  .u-Processing.u-Processing--inline {
+    margin: auto;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+  }
 }
 
 // Styling for Large items

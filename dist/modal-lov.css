@@ -9,6 +9,17 @@
   cursor: pointer;
   z-index: 1;
 }
+.a-GV-columnItem .search-clear {
+  right: 52px;
+}
+.a-GV-columnItem .u-Processing.u-Processing--inline {
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
 .t-Form--large .t-Form-inputContainer .search-clear {
   padding: 9px;
 }
