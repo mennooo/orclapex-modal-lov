@@ -61,6 +61,6 @@ The plug-in uses the item label as column heading for the display column in the 
 You can find a detailed explanation in the help section of the plugin.
 
 ## Future developments
-* Currently only support for VARCHAR2, NUMBER and DATE columns. If needed others could be added.
+* Currently only support for VARCHAR2, NUMBER and DATE columns. If needed, others could be added.
 * Please let me know any of your wishes
 
