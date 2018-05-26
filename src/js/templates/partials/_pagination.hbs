@@ -1,0 +1,23 @@
+{{#if pagination.rowCount}}
+<div class="t-ButtonRegion-col t-ButtonRegion-col--left">
+    <div class="t-ButtonRegion-buttons">
+      {{#if pagination.allowPrev}}
+        <a href="javascript:void(0);" class="t-Button t-Button--small t-Button--noUI t-Report-paginationLink t-Report-paginationLink--prev">
+          <span class="a-Icon icon-left-arrow"></span>Vorige
+        </a>
+      {{/if}}
+    </div>
+</div>
+<div class="t-ButtonRegion-col t-ButtonRegion-col--center" style="text-align: center;">
+  {{pagination.firstRow}} - {{pagination.lastRow}}
+</div>
+<div class="t-ButtonRegion-col t-ButtonRegion-col--right">
+    <div class="t-ButtonRegion-buttons">
+      {{#if pagination.allowNext}}
+        <a href="javascript:void(0);" class="t-Button t-Button--small t-Button--noUI t-Report-paginationLink t-Report-paginationLink--next">Volgende
+          <span class="a-Icon icon-right-arrow"></span>
+        </a>
+      {{/if}}
+    </div>
+</div>
+{{/if}}

@@ -1,0 +1,25 @@
+{
+  "name": "modal-lov",
+  "version": "1.0.0",
+  "description": "",
+  "main": "modal-lov.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "M. Hoogendijk",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "gulp": "^3.9.1",
+    "gulp-csso": "^3.0.1",
+    "gulp-less": "^3.5.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-streamify": "^1.0.2",
+    "gulp-uglify": "^1.5.3",
+    "gutil": "^1.6.4",
+    "handlebars": "^4.0.11",
+    "hbsfy": "^2.7.0",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}

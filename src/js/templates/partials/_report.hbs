@@ -1,0 +1,39 @@
+<div class="t-Report-tableWrap modal-lov-table">
+  <table cellpadding="0" border="0" cellspacing="0" class="" width="100%">
+    <tbody>
+      <tr>
+        <td></td>
+      </tr>
+      <tr>
+        <td>
+          {{#if report.rowCount}}
+            <table cellpadding="0" border="0" cellspacing="0" summary="" class="t-Report-report {{report.classes}}" width="100%">
+              <tbody>
+                {{#if report.showHeaders}}
+                  <thead>
+                    {{#each report.columns}}
+                      <th align="left" class="t-Report-colHead" id="{{@key}}">
+                        {{#if this.label}}
+                          {{this.label}}
+                        {{else}}
+                          {{this.name}}
+                        {{/if}}
+                      </th>
+                    {{/each}}
+                  </thead>
+                {{/if}}
+                {{#report}}
+                  {{!partial because we need to reload it dynamically}}
+                  {{> rows}}
+                {{/report}}
+              </tbody>
+            </table>
+          {{/if}}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  {{#unless report.rowCount}}
+    <span class="nodatafound">{{report.noDataFound}}</span>
+  {{/unless}}
+</div>

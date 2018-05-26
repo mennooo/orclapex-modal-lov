@@ -1,0 +1,32 @@
+<div id="{{id}}" class="t-DialogRegion js-regieonDialog t-Form--stretchInputs t-Form--large " title="{{title}}">
+    <div class="t-DialogRegion-body js-regionDialog-body no-padding" {{{region.attributes}}}>
+        <div class="container">
+            <div class="row">
+                <div class="col col-12">
+                    <div class="t-Report t-Report--altRowsDefault">
+                        <div class="t-Report-wrap" style="width: 100%">
+                            <div class="t-Form-fieldContainer t-Form-fieldContainer--stacked t-Form-fieldContainer--stretchInputs margin-top-sm" id="{{searchField.id}}_CONTAINER">
+                                <div class="t-Form-inputContainer">
+                                    <div class="t-Form-itemWrapper">
+                                        <input type="text" class="apex-item-text modal-lov-item " id="{{searchField.id}}" autocomplete="off" placeholder="{{searchField.placeholder}}">
+                                        <button type="button" id="P1110_ZAAL_FK_CODE_BUTTON" class="a-Button modal-lov-button a-Button--popupLOV">
+                                            <span class="a-Icon fa fa-search"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {{> report}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="t-DialogRegion-buttons js-regionDialog-buttons">
+        <div class="t-ButtonRegion t-ButtonRegion--dialogRegion">
+            <div class="t-ButtonRegion-wrap">
+                {{> pagination}}
+            </div>
+        </div>
+    </div>
+</div>
