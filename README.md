@@ -1,7 +1,11 @@
 # orclapex-modal-lov
 A modal LOV item plug-in for Oracle APEX that works in the Interactive Grid.
 
+Page Item
 ![Preview](https://github.com/mennooo/orclapex-modal-lov/blob/master/preview.gif "Preview")
+
+Interactive Grid Column Item
+![Preview](https://github.com/mennooo/orclapex-modal-lov/blob/master/images/ig.gif "Preview Interactive Grid")
 
 ## Demo
 https://apex.oracle.com/pls/apex/f?p=115922:16
