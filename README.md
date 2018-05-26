@@ -3,11 +3,11 @@ A modal LOV item plug-in for Oracle APEX that works in the Interactive Grid.
 
 Page Item
 
-<img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/preview.gif" width="48px">
+<img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/preview.gif" width="500px">
 
 Interactive Grid Column Item
 
-![Preview](https://github.com/mennooo/orclapex-modal-lov/blob/master/images/ig.gif "Preview Interactive Grid")
+<img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/images/ig.gif" width="500px">
 
 ## Demo
 https://apex.oracle.com/pls/apex/f?p=115922:16
