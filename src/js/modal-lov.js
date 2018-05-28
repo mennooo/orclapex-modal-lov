@@ -151,7 +151,9 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         beforeClose: function () {
           self._onCloseDialog(this, options)
           // Prevent scrolling down on modal close
-          document.activeElement.blur()
+          if (document.activeElement) {
+            document.activeElement.blur()
+          }
         },
         close: function () {
           apex.util.getTopApex().navigation.endFreezeScroll()
@@ -308,6 +310,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       $(window.top.document).off('keyup', '#' + self.options.searchField)
       self._displayItem$.off('keyup')
       self._modalDialog$.remove()
+      apex.util.getTopApex().navigation.endFreezeScroll()
     },
 
     _getData: function (options, handler) {
