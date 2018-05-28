@@ -46,6 +46,18 @@
 
 // Styling for the modal LOV
 .modal-lov {
+  display: flex;
+  flex-direction: column;
+  .no-padding {
+    padding: 0;
+  }
+  .t-Form-fieldContainer{
+    flex: 0;
+  }
+  .t-DialogRegion-body {
+    flex: 1;
+    overflow-y: auto;
+  }
   .u-Processing.u-Processing--inline {
     margin: auto;
     position: absolute;

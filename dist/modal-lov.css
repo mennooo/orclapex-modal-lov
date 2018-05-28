@@ -35,6 +35,20 @@
 .ui-dialog.modal-lg {
   width: 720px !important;
 }
+.modal-lov {
+  display: flex;
+  flex-direction: column;
+}
+.modal-lov .no-padding {
+  padding: 0;
+}
+.modal-lov .t-Form-fieldContainer {
+  flex: 0;
+}
+.modal-lov .t-DialogRegion-body {
+  flex: 1;
+  overflow-y: auto;
+}
 .modal-lov .u-Processing.u-Processing--inline {
   margin: auto;
   position: absolute;

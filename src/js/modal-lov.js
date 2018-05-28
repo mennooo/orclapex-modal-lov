@@ -33,6 +33,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       hoverClasses: 'hover u-color-1'
     },
 
+    _displayItem$: null,
+    _returnItem$: null,
+    _searchButton$: null,
+    _clearInput$: null,
+
     _templateData: {},
     _lastSearchTerm: '',
 
@@ -51,7 +56,10 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _create: function () {
       var self = this
 
-      // self.options.displayItem = 'p_ignore_' + self.options.displayItem
+      self._displayItem$ = $('#' + self.options.displayItem)
+      self._returnItem$ = $('#' + self.options.returnItem)
+      self._searchButton$ = $('#' + self.options.searchButton)
+      self._clearInput$ = self._displayItem$.parent().find('.search-clear')
 
       // Trigger event on click input display field
       self._triggerLOVOnDisplay()
@@ -137,12 +145,16 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         open: function (modal) {
           // remove opener because it makes the page scroll down for IG
           window.top.$(this).data('uiDialog').opener = window.top.$()
+          apex.util.getTopApex().navigation.beginFreezeScroll()
           self._onOpenDialog(this, options)
         },
         beforeClose: function () {
           self._onCloseDialog(this, options)
           // Prevent scrolling down on modal close
           document.activeElement.blur()
+        },
+        close: function () {
+          apex.util.getTopApex().navigation.endFreezeScroll()
         }
       })
     },
@@ -294,7 +306,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       $(window.top.document).off('keydown')
       $(window.top.document).off('keyup', '#' + self.options.searchField)
-      $('#' + self.options.displayItem).off('keyup')
+      self._displayItem$.off('keyup')
       self._modalDialog$.remove()
     },
 
@@ -320,7 +332,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         x03: settings.firstRow, // first rownum to return
         pageItems: items
       }, {
-        target: $('#' + self.options.returnItem),
+        target: self._returnItem$,
         dataType: 'json',
         loadingIndicator: $.proxy(options.loadingIndicator, self),
         success: function (pData) {
@@ -435,12 +447,12 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _triggerLOVOnDisplay: function () {
       var self = this
       // Trigger event on click input display field
-      $('#' + self.options.displayItem).on('keyup', function (e) {
+      self._displayItem$.on('keyup', function (e) {
         if ($.inArray(e.keyCode, self._validSearchKeys) > -1 && !e.ctrlKey) {
           // Also keep real item in sync without validations
           // But check for changes
           // TODO: find solution
-          $('#' + self.options.returnItem).val(apex.item(self.options.displayItem).getValue())
+          self._returnItem$.val(apex.item(self.options.displayItem).getValue())
           
           $(this).off('keyup')
           self._openLOV({
@@ -454,7 +466,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _triggerLOVOnButton: function () {
       var self = this
       // Trigger event on click input group addon button (magnifier glass)
-      $('#' + self.options.searchButton).on('click', function (e) {
+      self._searchButton$.on('click', function (e) {
         self._openLOV({
           searchTerm: '',
           fillSearchText: false
@@ -536,7 +548,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       apex.item(self.options.returnItem).setValue($row.data('return'), $row.data('display'))
       // Also add the display value as data attr on the hidden return item. This is used for validation.
-      $('#' + self.options.returnItem).data('display', $row.data('display'))
+      self._returnItem$.data('display', $row.data('display'))
 
       // Trigger a custom event and add data to it: all columns of the row
       var data = {}
@@ -548,8 +560,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._modalDialog$.dialog('close')
 
       // And focus on input but not for IG column item
-      if (!$('#' + self.options.displayItem).parent().hasClass('a-GV-columnItem')) {
-        $('#' + self.options.displayItem).focus()
+      if (!self._displayItem$.parent().hasClass('a-GV-columnItem')) {
+        self._displayItem$.focus()
       }
     },
 
@@ -570,15 +582,15 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       apex.item(self.options.displayItem).setValue('')
       apex.item(self.options.returnItem).setValue('')
-      $('#' + self.options.returnItem).data('display', '')
+      self._returnItem$.data('display', '')
       self._removeValidation()
-      $('#' + self.options.displayItem).focus()
+      self._displayItem$.focus()
     },
 
     _initClearInput: function () {
       var self = this
 
-      $('#' + self.options.displayItem).parent().find('.search-clear').on('click', function () {
+      self._clearInput$.on('click', function () {
         self._clearInput()
       })
     },
@@ -605,10 +617,10 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         dataType: 'json',
         loadingIndicator: $.proxy(self._itemLoadingIndicator, self),
         success: function (pData) {
-          $('#' + self.options.returnItem).val(pData.returnValue)
-          $('#' + self.options.displayItem).val(pData.displayValue)
+          self._returnItem$.val(pData.returnValue)
+          self._displayItem$.val(pData.displayValue)
           // Also add the display value as data attr on the hidden return item. This is used for validation.
-          $('#' + self.options.returnItem).data('display', pData.displayValue)
+          self._returnItem$.data('display', pData.displayValue)
         },
         error: function (pData) {
           // Throw an error
@@ -621,25 +633,48 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       // Set and get value via apex functions
       apex.item.create(self.options.returnItem, {
+        enable: function () {
+          self._displayItem$.prop('disabled', false)
+          self._returnItem$.prop('disabled', false)
+          self._searchButton$.prop('disabled', false)
+          self._clearInput$.show()
+        },
+        disable: function () {
+          self._displayItem$.prop('disabled', true)
+          self._returnItem$.prop('disabled', true)
+          self._searchButton$.prop('disabled', true)
+          self._clearInput$.hide()
+        },
+        isDisabled: function () {
+          return self._displayItem$.prop('disabled')
+        },
+        show: function () {
+          self._displayItem$.show()
+          self._searchButton$.show()
+        },
+        hide: function () {
+          self._displayItem$.hide()
+          self._searchButton$.hide()
+        },
         setValue: function (pValue, pDisplayValue, pSuppressChangeEvent) {
           if (pDisplayValue || pValue.length === 0) {
-            $('#' + self.options.displayItem).val(pDisplayValue)
-            $('#' + self.options.returnItem).val(pValue)
-            $('#' + self.options.returnItem).data('display', pDisplayValue)
+            self._displayItem$.val(pDisplayValue)
+            self._returnItem$.val(pValue)
+            self._returnItem$.data('display', pDisplayValue)
           } else {
-            $('#' + self.options.displayItem).val(pDisplayValue)
+            self._displayItem$.val(pDisplayValue)
             self._setValueBasedOnDisplay(pValue)
           }
         },
         getValue: function () {
-          return $('#' + self.options.returnItem).val()
+          return self._returnItem$.val()
         },
         isChanged: function () {
           return document.getElementById(self.options.displayItem).value !== document.getElementById(self.options.displayItem).defaultValue
         }
       })
       apex.item(self.options.returnItem).callbacks.displayValueFor = function () {
-        return $('#' + self.options.displayItem).val()
+        return self._displayItem$.val()
       }
     },
 
