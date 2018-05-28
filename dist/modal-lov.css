@@ -19,6 +19,10 @@
   left: 0;
   bottom: 0;
   right: 0;
+  z-index: 1;
+}
+.modal-lov-button {
+  order: 4;
 }
 .t-Form--large .t-Form-inputContainer .search-clear {
   padding: 9px;
@@ -62,11 +66,6 @@
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   padding-right: 35px !important;
-}
-.modal-lov .modal-lov-button {
-  -webkit-order: 3;
-  -ms-flex-order: 3;
-  order: 3;
 }
 .modal-lov .modal-lov-table .t-Report-cell {
   cursor: pointer;
