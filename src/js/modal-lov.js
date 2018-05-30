@@ -1,6 +1,10 @@
 /* global apex */
 var Handlebars = require('hbsfy/runtime')
 
+Handlebars.registerHelper('raw', function (options) {
+  return options.fn(this)
+})
+
 // Require dynamic templates
 var modalReportTemplate = require('./templates/modal-report.hbs')
 Handlebars.registerPartial('report', require('./templates/partials/_report.hbs'))
@@ -24,13 +28,15 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       displayCol: '',
       validationError: '',
       cascadingItems: '',
-      modalSize: 'modal-md',
+      modalWidth: 600,
       noDataFound: '',
       allowMultilineRows: false,
       rowCount: 15,
       pageItemsToSubmit: '',
       markClasses: 'u-hot',
-      hoverClasses: 'hover u-color-1'
+      hoverClasses: 'hover u-color-1',
+      previousLabel: 'previous',
+      nextLabel: 'next'
     },
 
     _displayItem$: null,
@@ -38,10 +44,14 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _searchButton$: null,
     _clearInput$: null,
 
+    _searchField$: null,
+
     _templateData: {},
     _lastSearchTerm: '',
 
     _modalDialog$: null,
+
+    _activeDelay: false,
 
     // Combination of number, char and space, arrow keys
     _validSearchKeys: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // numbers
@@ -60,6 +70,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._returnItem$ = $('#' + self.options.returnItem)
       self._searchButton$ = $('#' + self.options.searchButton)
       self._clearInput$ = self._displayItem$.parent().find('.search-clear')
+
+      self._addCSSToTopLevel()
 
       // Trigger event on click input display field
       self._triggerLOVOnDisplay()
@@ -106,7 +118,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // close takes place when no record has been selected, instead the close modal (or esc) was clicked/ pressed
       // It could mean two things: keep current or take the user's display value
       // What about two equal display values?
-  
+
       // But no record selection could mean cancel
       // but open modal and forget about it
       // in the end, this should keep things intact as they were
@@ -117,31 +129,19 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _onLoad: function (options) {
       var self = options.widget
 
-      // hide loader
-      self._hideOverlayLoader(self.pageSpinner)
-
       // Create LOV region
       var $modalRegion = window.top.$(modalReportTemplate(self._templateData)).appendTo('body')
-
-      var dialogClass
-      switch (self.options.modalSize) {
-        case 'modal-lg':
-          dialogClass = 'modal-l'
-          break
-        default:
-          dialogClass = self.options.modalSize
-      }
 
       // Open new modal
       $modalRegion.dialog({
         height: $modalRegion.find('.t-Report-wrap').height() + 150, // + dialog button height
-        width: $modalRegion.find('.modal-lov-table > table').width(),
+        width: self.options.modalWidth,
         closeText: apex.lang.getMessage('APEX.DIALOG.CLOSE'),
         draggable: true,
         modal: true,
         resizable: true,
         closeOnEscape: true,
-        dialogClass: 'ui-dialog--apex ' + dialogClass,
+        dialogClass: 'ui-dialog--apex ',
         open: function (modal) {
           // remove opener because it makes the page scroll down for IG
           window.top.$(this).data('uiDialog').opener = window.top.$()
@@ -174,9 +174,16 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // Replace report with new data
       $(modalLOVTable).replaceWith(reportHtml)
       $(pagination).html(paginationHtml)
-      
+
       // selectInitialRow in new modal-lov table
       self._selectInitialRow()
+
+      // Make the enter key do something again
+      self._activeDelay = false
+    },
+
+    _unescape: function (val) {
+      return val //$('<input value="' + val + '"/>').val()
     },
 
     _getTemplateData: function () {
@@ -210,8 +217,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           lastRow: 0,
           allowPrev: false,
           allowNext: false,
-          previous: apex.lang.getMessage('APEX.GV.PREV_PAGE'),
-          next: apex.lang.getMessage('APEX.GV.NEXT_PAGE')
+          previous: self.options.previousLabel,
+          next: self.options.nextLabel
         }
       }
 
@@ -288,11 +295,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         }
         // add column values to row
         $.each(templateData.report.columns, function (colId, col) {
-          tmpRow.columns[colId] = row[col.name]
+          tmpRow.columns[colId] = self._unescape(row[col.name])
         })
         // add metadata to row
-        tmpRow.returnVal = $('<input value="' + row[self.options.returnCol] + '"/>').val() // little trick to remove special chars
-        tmpRow.displayVal = $('<input value="' + row[self.options.displayCol] + '"/>').val() // little trick to remove special chars
+        tmpRow.returnVal = row[self.options.returnCol]
+        tmpRow.displayVal = row[self.options.displayCol]
         return tmpRow
       })
 
@@ -339,7 +346,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         dataType: 'json',
         loadingIndicator: $.proxy(options.loadingIndicator, self),
         success: function (pData) {
-          // self._hideOverlayLoader(self.modalSpinner)
           self.options.dataSource = pData
           self._templateData = self._getTemplateData()
           handler({
@@ -364,12 +370,16 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
       // Action when user inputs search text
       $(window.top.document).on('keyup', '#' + self.options.searchField, function (event) {
-        // Do nothing for navigation keys and escape
-        var navigationKeys = [37, 38, 39, 40, 9, 33, 34, 27]
+        // Do nothing for navigation keys, escape and enter
+        var navigationKeys = [37, 38, 39, 40, 9, 33, 34, 27, 13]
         if ($.inArray(event.keyCode, navigationKeys) > -1) {
           return false
         }
 
+        // Stop the enter key from selecting a row
+        self._activeDelay = true
+
+        // Don't search on all key events but add a delay for performance
         var srcEl = event.currentTarget
         if (srcEl.delayTimer) {
           clearTimeout(srcEl.delayTimer)
@@ -447,6 +457,20 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       }, self._onLoad)
     },
 
+    _addCSSToTopLevel: function () {
+      // CSS file is always present when the current window is the top window, so do nothing
+      if (window === window.top) {
+        return
+      }
+
+      var cssSelector = 'link[rel="stylesheet"][href*="modal-lov"]'
+
+      // Check if file exists in top window
+      if (window.top.$(cssSelector).length === 0) {
+        window.top.$('head').append($(cssSelector))
+      }
+    },
+
     _triggerLOVOnDisplay: function () {
       var self = this
       // Trigger event on click input display field
@@ -456,7 +480,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           // But check for changes
           // TODO: find solution
           self._returnItem$.val(apex.item(self.options.displayItem).getValue())
-          
+
           $(this).off('keyup')
           self._openLOV({
             searchTerm: apex.item(self.options.displayItem).getValue(),
@@ -532,8 +556,10 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
             navigate('down', e)
             break
           case 13: // ENTER
-            var currentRow = self._modalDialog$.find('.t-Report-report tr.mark').first()
-            self._returnSelectedRow(currentRow)
+            if (!self._activeDelay) {
+              var currentRow = self._modalDialog$.find('.t-Report-report tr.mark').first()
+              self._returnSelectedRow(currentRow)
+            }
             break
           case 33: // Page up
             e.preventDefault()
@@ -549,9 +575,9 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _returnSelectedRow: function ($row) {
       var self = this
-      apex.item(self.options.returnItem).setValue($row.data('return'), $row.data('display'))
+      apex.item(self.options.returnItem).setValue(self._unescape($row.data('return')), self._unescape($row.data('display')))
       // Also add the display value as data attr on the hidden return item. This is used for validation.
-      self._returnItem$.data('display', $row.data('display'))
+      // self._returnItem$.data('display', $row.data('display'))
 
       // Trigger a custom event and add data to it: all columns of the row
       var data = {}
@@ -585,7 +611,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       apex.item(self.options.displayItem).setValue('')
       apex.item(self.options.returnItem).setValue('')
-      self._returnItem$.data('display', '')
+      // self._returnItem$.data('display', '')
       self._removeValidation()
       self._displayItem$.focus()
     },
@@ -596,12 +622,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._clearInput$.on('click', function () {
         self._clearInput()
       })
-    },
-
-    _hideOverlayLoader: function (spinner) {
-      if (spinner) {
-        spinner.remove()
-      }
     },
 
     _initCascadingLOVs: function () {
@@ -623,7 +643,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           self._returnItem$.val(pData.returnValue)
           self._displayItem$.val(pData.displayValue)
           // Also add the display value as data attr on the hidden return item. This is used for validation.
-          self._returnItem$.data('display', pData.displayValue)
+          // self._returnItem$.data('display', pData.displayValue)
         },
         error: function (pData) {
           // Throw an error
@@ -663,7 +683,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           if (pDisplayValue || pValue.length === 0) {
             self._displayItem$.val(pDisplayValue)
             self._returnItem$.val(pValue)
-            self._returnItem$.data('display', pDisplayValue)
+            // self._returnItem$.data('display', pDisplayValue)
           } else {
             self._displayItem$.val(pDisplayValue)
             self._setValueBasedOnDisplay(pValue)

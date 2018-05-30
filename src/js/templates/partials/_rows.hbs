@@ -1,7 +1,7 @@
 {{#each rows}}
   <tr data-return="{{this.returnVal}}" data-display="{{this.displayVal}}" class="pointer">
     {{#each this.columns}}
-    <td headers="{{@key}}" class="t-Report-cell">{{this}}</td>
+      <td headers="{{@key}}" class="t-Report-cell">{{this}}</td>
     {{/each}}
   </tr>
 {{/each}}

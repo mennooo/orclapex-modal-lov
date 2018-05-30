@@ -21,21 +21,6 @@
 .modal-lov-button {
   order: 4;
 }
-.t-Form--large .t-Form-inputContainer .search-clear {
-  padding: 9px;
-}
-.ui-dialog.modal-xs,
-.ui-dialog.modal-sm {
-  width: 480px !important;
-}
-.ui-dialog.modal-l,
-.ui-dialog.modal-md {
-  width: 600px !important;
-}
-.ui-dialog.modal-xl,
-.ui-dialog.modal-lg {
-  width: 720px !important;
-}
 .modal-lov {
   display: flex;
   flex-direction: column;
@@ -72,6 +57,9 @@
 }
 .modal-lov .modal-lov-table .mark .t-Report-cell {
   background-color: inherit!important;
+}
+.modal-lov .t-ButtonRegion-col {
+  width: 33%;
 }
 .a-GV-columnItem .apex-item-group {
   width: 100%;
