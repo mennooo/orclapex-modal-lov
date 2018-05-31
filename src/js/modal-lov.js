@@ -503,7 +503,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _onRowHover: function () {
       var self = this
-      self._modalDialog$.on('mouseenter mouseleave', '.t-Report-report tr', function () {
+      self._modalDialog$.on('mouseenter mouseleave', '.t-Report-report tbody tr', function () {
         if ($(this).hasClass('mark')) {
           return
         }
