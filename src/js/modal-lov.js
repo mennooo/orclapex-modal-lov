@@ -467,7 +467,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
       // Check if file exists in top window
       if (window.top.$(cssSelector).length === 0) {
-        window.top.$('head').append($(cssSelector))
+        window.top.$('head').append($(cssSelector).clone())
       }
     },
 
@@ -575,6 +575,12 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _returnSelectedRow: function ($row) {
       var self = this
+
+      // Do nothing if row does not exist
+      if (!$row || $row.length === 0) {
+        return
+      }
+
       apex.item(self.options.returnItem).setValue(self._unescape($row.data('return')), self._unescape($row.data('display')))
       // Also add the display value as data attr on the hidden return item. This is used for validation.
       // self._returnItem$.data('display', $row.data('display'))
