@@ -33,7 +33,7 @@ Additionally you can put the CSS & JavaScript on your web server and the PL/SQL 
 * Support for Interactive Grid column items
 * Support for Universal Theme Template Options
 * Support for Shared Component LOVs
-* Three sizes (width) for the Modal LOV: Small, Medium, Large
+* Set width of the Modal LOV (in pixels)
 * Change value using a Dynamic Action or JavaScript
 * Change number of rows in Modal LOV
 * Change title of Modal LOV
