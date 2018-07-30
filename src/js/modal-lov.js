@@ -147,6 +147,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           window.top.$(this).data('uiDialog').opener = window.top.$()
           apex.util.getTopApex().navigation.beginFreezeScroll()
           self._onOpenDialog(this, options)
+
         },
         beforeClose: function () {
           self._onCloseDialog(this, options)
@@ -454,7 +455,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         searchTerm: options.searchTerm,
         fillSearchText: options.fillSearchText,
         loadingIndicator: self._itemLoadingIndicator
-      }, self._onLoad)
+      }, options.afterData)
     },
 
     _addCSSToTopLevel: function () {
@@ -476,15 +477,16 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       // Trigger event on click input display field
       self._displayItem$.on('keyup', function (e) {
         if ($.inArray(e.keyCode, self._validSearchKeys) > -1 && !e.ctrlKey) {
-          // Also keep real item in sync without validations
-          // But check for changes
-          // TODO: find solution
-          self._returnItem$.val(apex.item(self.options.displayItem).getValue())
-
           $(this).off('keyup')
           self._openLOV({
             searchTerm: apex.item(self.options.displayItem).getValue(),
-            fillSearchText: true
+            fillSearchText: true,
+            afterData: function (options) {
+              self._onLoad(options)
+              // Clear input as soon as modal is ready
+              self._returnItem$.val('')
+              self._displayItem$.val('')
+            }
           })
         }
       })
@@ -496,7 +498,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._searchButton$.on('click', function (e) {
         self._openLOV({
           searchTerm: '',
-          fillSearchText: false
+          fillSearchText: false,
+          afterData: self._onLoad
         })
       })
     },
@@ -696,7 +699,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           }
         },
         getValue: function () {
-          return self._returnItem$.val()
+          return self._returnItem$.val() || self._displayItem$.val()
         },
         isChanged: function () {
           return document.getElementById(self.options.displayItem).value !== document.getElementById(self.options.displayItem).defaultValue
