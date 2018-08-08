@@ -17,8 +17,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     options: {
       id: '',
       title: '',
-      returnItem: '',
-      displayItem: '',
+      itemName: '',
       searchField: '',
       searchButton: '',
       searchPlaceholder: '',
@@ -39,8 +38,9 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       nextLabel: 'next'
     },
 
-    _displayItem$: null,
-    _returnItem$: null,
+    _returnValue: '',
+
+    _item$: null,
     _searchButton$: null,
     _clearInput$: null,
 
@@ -52,6 +52,24 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _modalDialog$: null,
 
     _activeDelay: false,
+
+    _ig$: null,
+    _grid: null,
+
+    _resetFocus: function () {
+      var self = this
+      if (this._grid) {
+        var recordId = this._grid.model.getRecordId(this._grid.view$.grid('getSelectedRecords')[0])
+        var column = this._ig$.interactiveGrid('option').config.columns.filter(function (column) {
+          return column.staticId === self.options.itemName
+        })[0]
+        this._grid.setEditMode(false)
+        this._grid.view$.grid('gotoCell', recordId, column.name)
+        this._grid.focus()
+      } else {
+        this._item$.focus()
+      }
+    },
 
     // Combination of number, char and space, arrow keys
     _validSearchKeys: [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // numbers
@@ -66,10 +84,10 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _create: function () {
       var self = this
 
-      self._displayItem$ = $('#' + self.options.displayItem)
-      self._returnItem$ = $('#' + self.options.returnItem)
+      self._item$ = $('#' + self.options.itemName)
+      self._returnValue = self._item$.data('returnValue').toString()
       self._searchButton$ = $('#' + self.options.searchButton)
-      self._clearInput$ = self._displayItem$.parent().find('.search-clear')
+      self._clearInput$ = self._item$.parent().find('.search-clear')
 
       self._addCSSToTopLevel()
 
@@ -98,7 +116,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._removeValidation()
       // Add text from display field
       if (options.fillSearchText) {
-        window.top.$s(self.options.searchField, apex.item(self.options.displayItem).getValue())
+        window.top.$s(self.options.searchField, self._item$.val())
       }
       // Add class on hover
       self._onRowHover()
@@ -126,12 +144,22 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       options.widget._triggerLOVOnDisplay()
     },
 
+    _initGridConfig: function () {
+      this._ig$ = this._item$.closest('.a-IG')
+
+      if (this._ig$.length > 0) {
+        this._grid = this._ig$.interactiveGrid('getViews').grid
+      }
+    },
+
     _onLoad: function (options) {
       var self = options.widget
 
+      self._initGridConfig()
+
       // Create LOV region
       var $modalRegion = window.top.$(modalReportTemplate(self._templateData)).appendTo('body')
-
+      
       // Open new modal
       $modalRegion.dialog({
         height: $modalRegion.find('.t-Report-wrap').height() + 150, // + dialog button height
@@ -152,11 +180,12 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           self._onCloseDialog(this, options)
           // Prevent scrolling down on modal close
           if (document.activeElement) {
-            document.activeElement.blur()
+            // document.activeElement.blur()
           }
         },
         close: function () {
           apex.util.getTopApex().navigation.endFreezeScroll()
+          // Stop edit mode of possible IG
         }
       })
     },
@@ -315,7 +344,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       $(window.top.document).off('keydown')
       $(window.top.document).off('keyup', '#' + self.options.searchField)
-      self._displayItem$.off('keyup')
+      self._item$.off('keyup')
       self._modalDialog$.remove()
       apex.util.getTopApex().navigation.endFreezeScroll()
     },
@@ -342,7 +371,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         x03: settings.firstRow, // first rownum to return
         pageItems: items
       }, {
-        target: self._returnItem$,
+        target: self._item$,
         dataType: 'json',
         loadingIndicator: $.proxy(options.loadingIndicator, self),
         success: function (pData) {
@@ -463,28 +492,30 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         return
       }
 
+      var topApex = apex.util.getTopApex()
+
       var cssSelector = 'link[rel="stylesheet"][href*="modal-lov"]'
 
       // Check if file exists in top window
-      if (window.top.$(cssSelector).length === 0) {
-        window.top.$('head').append($(cssSelector).clone())
+      if (topApex.jQuery(cssSelector).length === 0) {
+        topApex.jQuery('head').append($(cssSelector).clone())
       }
     },
 
     _triggerLOVOnDisplay: function () {
       var self = this
       // Trigger event on click input display field
-      self._displayItem$.on('keyup', function (e) {
-        if ($.inArray(e.keyCode, self._validSearchKeys) > -1 && !e.ctrlKey) {
+      self._item$.on('keyup', function (e) {
+        if ($.inArray(e.keyCode, self._validSearchKeys) > -1 && (!e.ctrlKey || e.keyCode === 86)) {
           $(this).off('keyup')
           self._openLOV({
-            searchTerm: apex.item(self.options.displayItem).getValue(),
+            searchTerm: self._item$.val(),
             fillSearchText: true,
             afterData: function (options) {
               self._onLoad(options)
               // Clear input as soon as modal is ready
-              self._returnItem$.val('')
-              self._displayItem$.val('')
+              self._returnValue = ''
+              self._item$.val('')
             }
           })
         }
@@ -517,7 +548,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       // If current item in LOV then select that row
       // Else select first row of report
-      var $curRow = self._modalDialog$.find('.t-Report-report tr[data-return="' + apex.item(self.options.returnItem).getValue() + '"]')
+      var $curRow = self._modalDialog$.find('.t-Report-report tr[data-return="' + self._returnValue + '"]')
       if ($curRow.length > 0) {
         $curRow.addClass('mark ' + self.options.markClasses)
       } else {
@@ -583,9 +614,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         return
       }
 
-      apex.item(self.options.returnItem).setValue(self._unescape($row.data('return')), self._unescape($row.data('display')))
-      // Also add the display value as data attr on the hidden return item. This is used for validation.
-      // self._returnItem$.data('display', $row.data('display'))
+      apex.item(self.options.itemName).setValue(self._unescape($row.data('return').toString()), self._unescape($row.data('display')))
+
 
       // Trigger a custom event and add data to it: all columns of the row
       var data = {}
@@ -597,31 +627,28 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._modalDialog$.dialog('close')
 
       // And focus on input but not for IG column item
-      if (!self._displayItem$.parent().hasClass('a-GV-columnItem')) {
-        self._displayItem$.focus()
-      }
+      self._resetFocus()
     },
 
     _onRowSelected: function () {
       var self = this
       // Action when row is clicked
-      self._modalDialog$.on('click', '.modal-lov-table .t-Report-report tr', function (e) {
+      self._modalDialog$.on('click', '.modal-lov-table .t-Report-report tbody tr', function (e) {
         self._returnSelectedRow(window.top.$(this))
       })
     },
 
     _removeValidation: function () {
       // Clear current errors
-      apex.message.clearErrors(this.options.returnItem)
+      apex.message.clearErrors(this.options.itemName)
     },
 
     _clearInput: function () {
       var self = this
-      apex.item(self.options.displayItem).setValue('')
-      apex.item(self.options.returnItem).setValue('')
-      // self._returnItem$.data('display', '')
+      apex.item(self.options.itemName).setValue('')
+      self._returnValue = ''
       self._removeValidation()
-      self._displayItem$.focus()
+      self._item$.focus()
     },
 
     _initClearInput: function () {
@@ -648,10 +675,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         dataType: 'json',
         loadingIndicator: $.proxy(self._itemLoadingIndicator, self),
         success: function (pData) {
-          self._returnItem$.val(pData.returnValue)
-          self._displayItem$.val(pData.displayValue)
-        // Also add the display value as data attr on the hidden return item. This is used for validation.
-        // self._returnItem$.data('display', pData.displayValue)
+          self._returnValue = pData.returnValue
+          self._item$.val(pData.displayValue)
         },
         error: function (pData) {
           // Throw an error
@@ -663,69 +688,66 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _initApexItem: function () {
       var self = this
       // Set and get value via apex functions
-      apex.item.create(self.options.returnItem, {
+      apex.item.create(self.options.itemName, {
         enable: function () {
-          self._displayItem$.prop('disabled', false)
-          self._returnItem$.prop('disabled', false)
+          self._item$.prop('disabled', false)
           self._searchButton$.prop('disabled', false)
           self._clearInput$.show()
         },
         disable: function () {
-          self._displayItem$.prop('disabled', true)
-          self._returnItem$.prop('disabled', true)
+          self._item$.prop('disabled', true)
           self._searchButton$.prop('disabled', true)
           self._clearInput$.hide()
         },
         isDisabled: function () {
-          return self._displayItem$.prop('disabled')
+          return self._item$.prop('disabled')
         },
         show: function () {
-          self._displayItem$.show()
+          self._item$.show()
           self._searchButton$.show()
         },
         hide: function () {
-          self._displayItem$.hide()
+          self._item$.hide()
           self._searchButton$.hide()
         },
         setValue: function (pValue, pDisplayValue, pSuppressChangeEvent) {
-          if (pDisplayValue || pValue.length === 0) {
-            self._displayItem$.val(pDisplayValue)
-            self._returnItem$.val(pValue)
-          // self._returnItem$.data('display', pDisplayValue)
+          if (pDisplayValue || !pValue || pValue.length === 0) {
+            self._item$.val(pDisplayValue)
+            self._returnValue = pValue
           } else {
-            self._displayItem$.val(pDisplayValue)
+            self._item$.val(pDisplayValue)
             self._setValueBasedOnDisplay(pValue)
           }
         },
         getValue: function () {
-          return self._returnItem$.val() || self._displayItem$.val()
+          return self._returnValue
         },
         isChanged: function () {
-          return document.getElementById(self.options.displayItem).value !== document.getElementById(self.options.displayItem).defaultValue
+          return document.getElementById(self.options.itemName).value !== document.getElementById(self.options.itemName).defaultValue
         }
       })
-      apex.item(self.options.returnItem).callbacks.displayValueFor = function () {
-        return self._displayItem$.val()
+      apex.item(self.options.itemName).callbacks.displayValueFor = function () {
+        return self._item$.val()
       }
-      apex.item(self.options.returnItem).callbacks.getValidity = function () {
-        var empty = self._returnItem$.val().length === 0
-        if (empty && document.getElementById(self.options.displayItem).required) {
-          setTimeout(function () {
-            apex.message.showErrors([
-              {
-                message: document.getElementById(self.options.displayItem).validationMessage,
-                location: 'inline',
-                pageItem: self.options.returnItem
-              }
-            ])
-          }, 0)
-        }
-        var validity = {
-          valid: !empty,
-          valueMissing: empty
-        }
-        return validity
-      }
+      // apex.item(self.options.itemName).callbacks.getValidity = function () {
+      //   var empty = self._returnValue.length === 0
+      //   if (empty && document.getElementById(self.options.itemName).required) {
+      //     setTimeout(function () {
+      //       apex.message.showErrors([
+      //         {
+      //           message: document.getElementById(self.options.itemName).validationMessage,
+      //           location: 'inline',
+      //           pageItem: self.options.itemName
+      //         }
+      //       ])
+      //     }, 0)
+      //   }
+      //   var validity = {
+      //     valid: !empty,
+      //     valueMissing: empty
+      //   }
+      //   return validity
+      // }
     },
 
     _itemLoadingIndicator: function (loadingIndicator) {
