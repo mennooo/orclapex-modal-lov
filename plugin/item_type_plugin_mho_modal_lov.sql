@@ -13,8 +13,8 @@ whenever sqlerror exit sql.sqlcode rollback
 --------------------------------------------------------------------------------
 begin
 wwv_flow_api.import_begin (
- p_version_yyyy_mm_dd=>'2016.08.24'
-,p_release=>'5.1.4.00.08'
+ p_version_yyyy_mm_dd=>'2018.04.04'
+,p_release=>'18.1.0.00.45'
 ,p_default_workspace_id=>10390063953384733491
 ,p_default_application_id=>96571
 ,p_default_owner=>'CITIEST'
@@ -175,27 +175,21 @@ wwv_flow_api.create_plugin(
 'end print_json_from_sql;',
 '',
 '----------------------------------------------------------',
-'-- function get_display_value',
+'-- function get_lov_query',
 '----------------------------------------------------------',
-'function get_display_value (',
+'function get_lov_query (',
 '    p_lookup_query  varchar2',
 '  , p_return_col    varchar2',
 '  , p_display_col   varchar2',
-'  , p_return_val    varchar2',
 ') return varchar2',
 'is',
+'  ',
 '  -- table of columns from query',
 '  l_col_tab   dbms_sql.desc_tab3;',
 '',
-'  l_result    apex_plugin_util.t_column_value_list;',
-'',
 '  l_query     varchar2(4000);',
-'',
+'  ',
 'begin',
-'',
-'  if p_return_val is null then',
-'    return null;',
-'  end if;',
 '  ',
 '  -- Get column names first',
 '  l_col_tab := get_columns_from_query(',
@@ -214,6 +208,37 @@ wwv_flow_api.create_plugin(
 '  if l_query is null then',
 '    l_query := ''select '' || p_display_col || '', '' || p_return_col || '' from ('' || trim(trailing '';'' from p_lookup_query) || '')'';',
 '  end if;',
+'  ',
+'  return l_query;',
+'',
+'end get_lov_query;',
+'',
+'----------------------------------------------------------',
+'-- function get_display_value',
+'----------------------------------------------------------',
+'function get_display_value (',
+'    p_lookup_query  varchar2',
+'  , p_return_col    varchar2',
+'  , p_display_col   varchar2',
+'  , p_return_val    varchar2',
+') return varchar2',
+'is',
+'',
+'  l_result    apex_plugin_util.t_column_value_list;',
+'',
+'  l_query     varchar2(4000);',
+'',
+'begin',
+'',
+'  if p_return_val is null then',
+'    return null;',
+'  end if;',
+'  ',
+'  l_query := get_lov_query (',
+'      p_lookup_query  => p_lookup_query',
+'    , p_return_col    => p_return_col',
+'    , p_display_col   => p_display_col',
+'  );',
 '  ',
 '  l_result := apex_plugin_util.get_data (',
 '      p_sql_statement     => l_query',
@@ -688,9 +713,42 @@ wwv_flow_api.create_plugin(
 '      p_result.display_location := apex_plugin.c_inline_with_field_and_notif;',
 '      p_result.page_item_name := p_item.name;    ',
 '  end;',
-'end validation;'))
+'end validation;',
+'',
+'procedure meta_data (',
+'    p_item   in            apex_plugin.t_item,',
+'    p_plugin in            apex_plugin.t_plugin,',
+'    p_param  in            apex_plugin.t_item_meta_data_param,',
+'    p_result in out nocopy apex_plugin.t_item_meta_data_result )',
+'is',
+'',
+'  l_query     varchar2(4000);',
+'',
+'  -- The column with the return value',
+'  l_return_col          apex_application_page_items.attribute_03%type := p_item.attribute_03;',
+'  l_display_col         apex_application_page_items.attribute_04%type := p_item.attribute_04;',
+'  ',
+'begin',
+'',
+'  g_item := p_item;',
+'',
+'  enquote_names(',
+'    p_return_col  => l_return_col',
+'  , p_display_col => l_display_col',
+'  );',
+'  ',
+'  l_query := get_lov_query (',
+'      p_lookup_query  => g_item.lov_definition',
+'    , p_return_col    => l_return_col',
+'    , p_display_col   => l_display_col',
+'  );',
+'  ',
+'  p_result.display_lov_definition := l_query;',
+'',
+'end meta_data;'))
 ,p_api_version=>2
 ,p_render_function=>'render'
+,p_meta_data_function=>'meta_data'
 ,p_ajax_function=>'ajax'
 ,p_validation_function=>'validation'
 ,p_standard_attributes=>'VISIBLE:SESSION_STATE:READONLY:ESCAPE_OUTPUT:SOURCE:ELEMENT:WIDTH:PLACEHOLDER:LOV:CASCADING_LOV'
@@ -878,11 +936,18 @@ wwv_flow_api.create_plugin_attribute(
 '<br>',
 'If you don''t want the item value to be cleared, use this setting.'))
 );
+end;
+/
+begin
 wwv_flow_api.create_plugin_std_attribute(
  p_id=>wwv_flow_api.id(23156491881480707937)
 ,p_plugin_id=>wwv_flow_api.id(23156491674032707935)
 ,p_name=>'LOV'
+,p_sql_min_column_count=>2
+,p_sql_max_column_count=>999
+,p_depending_on_has_to_exist=>true
 );
+null;
 end;
 /
 begin

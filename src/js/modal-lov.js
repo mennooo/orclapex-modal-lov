@@ -147,7 +147,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           window.top.$(this).data('uiDialog').opener = window.top.$()
           apex.util.getTopApex().navigation.beginFreezeScroll()
           self._onOpenDialog(this, options)
-
         },
         beforeClose: function () {
           self._onCloseDialog(this, options)
@@ -184,7 +183,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     },
 
     _unescape: function (val) {
-      return val //$('<input value="' + val + '"/>').val()
+      return val // $('<input value="' + val + '"/>').val()
     },
 
     _getTemplateData: function () {
@@ -651,8 +650,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         success: function (pData) {
           self._returnItem$.val(pData.returnValue)
           self._displayItem$.val(pData.displayValue)
-          // Also add the display value as data attr on the hidden return item. This is used for validation.
-          // self._returnItem$.data('display', pData.displayValue)
+        // Also add the display value as data attr on the hidden return item. This is used for validation.
+        // self._returnItem$.data('display', pData.displayValue)
         },
         error: function (pData) {
           // Throw an error
@@ -692,7 +691,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           if (pDisplayValue || pValue.length === 0) {
             self._displayItem$.val(pDisplayValue)
             self._returnItem$.val(pValue)
-            // self._returnItem$.data('display', pDisplayValue)
+          // self._returnItem$.data('display', pDisplayValue)
           } else {
             self._displayItem$.val(pDisplayValue)
             self._setValueBasedOnDisplay(pValue)
@@ -707,6 +706,25 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       })
       apex.item(self.options.returnItem).callbacks.displayValueFor = function () {
         return self._displayItem$.val()
+      }
+      apex.item(self.options.returnItem).callbacks.getValidity = function () {
+        var empty = self._returnItem$.val().length === 0
+        if (empty && document.getElementById(self.options.displayItem).required) {
+          setTimeout(function () {
+            apex.message.showErrors([
+              {
+                message: document.getElementById(self.options.displayItem).validationMessage,
+                location: 'inline',
+                pageItem: self.options.returnItem
+              }
+            ])
+          }, 0)
+        }
+        var validity = {
+          valid: !empty,
+          valueMissing: empty
+        }
+        return validity
       }
     },
 

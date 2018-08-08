@@ -9,6 +9,12 @@
   cursor: pointer;
   z-index: 1;
 }
+.u-RTL .t-Form-inputContainer .search-clear,
+.u-RTL .a-GV-columnItem .search-clear {
+  left: 20px;
+  margin-left: -14px;
+  right: unset;
+}
 .a-GV-columnItem .u-Processing.u-Processing--inline {
   margin: auto;
   position: absolute;
@@ -49,6 +55,9 @@
   border-bottom-right-radius: 0;
   padding-right: 35px !important;
 }
+.modal-lov .modal-lov-table .t-Report-colHead {
+  text-align: left;
+}
 .modal-lov .modal-lov-table .t-Report-cell {
   cursor: pointer;
 }
@@ -60,6 +69,9 @@
 }
 .modal-lov .t-ButtonRegion-col {
   width: 33%;
+}
+.u-RTL .modal-lov .modal-lov-table .t-Report-colHead {
+  text-align: right;
 }
 .a-GV-columnItem .apex-item-group {
   width: 100%;
