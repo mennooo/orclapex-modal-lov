@@ -753,7 +753,7 @@ wwv_flow_api.create_plugin(
 ,p_standard_attributes=>'VISIBLE:SESSION_STATE:READONLY:ESCAPE_OUTPUT:SOURCE:ELEMENT:WIDTH:PLACEHOLDER:LOV:CASCADING_LOV:JOIN_LOV:FILTER'
 ,p_substitute_attributes=>true
 ,p_subscribe_plugin_settings=>true
-,p_version_identifier=>'1.0'
+,p_version_identifier=>'1.2'
 ,p_about_url=>'www.menn.ooo'
 ,p_files_version=>430
 );
