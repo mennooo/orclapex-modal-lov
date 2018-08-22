@@ -52,9 +52,12 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _modalDialog$: null,
 
     _activeDelay: false,
+    _disableChangeEvent: false,
 
     _ig$: null,
     _grid: null,
+
+    _topApex: apex.util.getTopApex(),
 
     _resetFocus: function () {
       var self = this
@@ -109,14 +112,14 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _onOpenDialog: function (modal, options) {
       var self = options.widget
-      self._modalDialog$ = window.top.$(modal)
+      self._modalDialog$ = self._topApex.jQuery(modal)
       // Focus on search field in LOV
-      window.top.$('#' + self.options.searchField).focus()
+      self._topApex.jQuery('#' + self.options.searchField).focus()
       // Remove validation results
       self._removeValidation()
       // Add text from display field
       if (options.fillSearchText) {
-        window.top.$s(self.options.searchField, self._item$.val())
+        self._topApex.apex.item(self.options.searchField).setValue(self._item$.val())
       }
       // Add class on hover
       self._onRowHover()
@@ -158,7 +161,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._initGridConfig()
 
       // Create LOV region
-      var $modalRegion = window.top.$(modalReportTemplate(self._templateData)).appendTo('body')
+      var $modalRegion = self._topApex.jQuery(modalReportTemplate(self._templateData)).appendTo('body')
       
       // Open new modal
       $modalRegion.dialog({
@@ -172,8 +175,8 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         dialogClass: 'ui-dialog--apex ',
         open: function (modal) {
           // remove opener because it makes the page scroll down for IG
-          window.top.$(this).data('uiDialog').opener = window.top.$()
-          apex.util.getTopApex().navigation.beginFreezeScroll()
+          self._topApex.jQuery(this).data('uiDialog').opener = self._topApex.jQuery()
+          self._topApex.navigation.beginFreezeScroll()
           self._onOpenDialog(this, options)
         },
         beforeClose: function () {
@@ -184,7 +187,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           }
         },
         close: function () {
-          apex.util.getTopApex().navigation.endFreezeScroll()
+          self._topApex.navigation.endFreezeScroll()
           // Stop edit mode of possible IG
         }
       })
@@ -346,7 +349,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       $(window.top.document).off('keyup', '#' + self.options.searchField)
       self._item$.off('keyup')
       self._modalDialog$.remove()
-      apex.util.getTopApex().navigation.endFreezeScroll()
+      self._topApex.navigation.endFreezeScroll()
     },
 
     _getData: function (options, handler) {
@@ -359,7 +362,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       }
 
       settings = $.extend(settings, options)
-      var searchTerm = (settings.searchTerm.length > 0) ? settings.searchTerm : window.top.$v(self.options.searchField)
+      var searchTerm = (settings.searchTerm.length > 0) ? settings.searchTerm : self._topApex.item(self.options.searchField).getValue()
       var items = self.options.pageItemsToSubmit
 
       // Store last searchTerm
@@ -388,7 +391,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _initSearch: function () {
       var self = this
       // if the lastSearchTerm is not equal to the current searchTerm, then search immediate
-      if (self._lastSearchTerm !== window.top.$v(self.options.searchField)) {
+      if (self._lastSearchTerm !== self._topApex.item(self.options.searchField).getValue()) {
         self._getData({
           firstRow: 1,
           loadingIndicator: self._modalLoadingIndicator
@@ -431,11 +434,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var nextSelector = '#' + self.options.id + ' .t-Report-paginationLink--next'
 
       // remove current listeners
-      window.top.$(window.top.document).off('click', prevSelector)
-      window.top.$(window.top.document).off('click', nextSelector)
+      self._topApex.jQuery(window.top.document).off('click', prevSelector)
+      self._topApex.jQuery(window.top.document).off('click', nextSelector)
 
       // Previous set
-      window.top.$(window.top.document).on('click', prevSelector, function (e) {
+      self._topApex.jQuery(window.top.document).on('click', prevSelector, function (e) {
         self._getData({
           firstRow: self._getFirstRownumPrevSet(),
           loadingIndicator: self._modalLoadingIndicator
@@ -445,7 +448,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       })
 
       // Next set
-      window.top.$(window.top.document).on('click', nextSelector, function (e) {
+      self._topApex.jQuery(window.top.document).on('click', nextSelector, function (e) {
         self._getData({
           firstRow: self._getFirstRownumNextSet(),
           loadingIndicator: self._modalLoadingIndicator
@@ -487,18 +490,16 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     },
 
     _addCSSToTopLevel: function () {
+      var self = this
       // CSS file is always present when the current window is the top window, so do nothing
       if (window === window.top) {
         return
       }
-
-      var topApex = apex.util.getTopApex()
-
       var cssSelector = 'link[rel="stylesheet"][href*="modal-lov"]'
 
       // Check if file exists in top window
-      if (topApex.jQuery(cssSelector).length === 0) {
-        topApex.jQuery('head').append($(cssSelector).clone())
+      if (self._topApex.jQuery(cssSelector).length === 0) {
+        self._topApex.jQuery('head').append($(cssSelector).clone())
       }
     },
 
@@ -596,11 +597,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
             break
           case 33: // Page up
             e.preventDefault()
-            window.top.$('#' + self.options.id + ' .t-ButtonRegion-buttons .t-Report-paginationLink--prev').trigger('click')
+            self._topApex.jQuery('#' + self.options.id + ' .t-ButtonRegion-buttons .t-Report-paginationLink--prev').trigger('click')
             break
           case 34: // Page down
             e.preventDefault()
-            window.top.$('#' + self.options.id + ' .t-ButtonRegion-buttons .t-Report-paginationLink--next').trigger('click')
+            self._topApex.jQuery('#' + self.options.id + ' .t-ButtonRegion-buttons .t-Report-paginationLink--next').trigger('click')
             break
         }
       })
@@ -634,7 +635,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       var self = this
       // Action when row is clicked
       self._modalDialog$.on('click', '.modal-lov-table .t-Report-report tbody tr', function (e) {
-        self._returnSelectedRow(window.top.$(this))
+        self._returnSelectedRow(self._topApex.jQuery(this))
       })
     },
 
@@ -661,28 +662,37 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _initCascadingLOVs: function () {
       var self = this
-      window.top.$(self.options.cascadingItems).on('change', function () {
+      self._topApex.jQuery(self.options.cascadingItems).on('change', function () {
         self._clearInput()
       })
     },
 
     _setValueBasedOnDisplay: function (pValue) {
       var self = this
-      apex.server.plugin(self.options.ajaxIdentifier, {
+
+      var promise = apex.server.plugin(self.options.ajaxIdentifier, {
         x01: 'GET_VALUE',
         x02: pValue // returnVal
       }, {
         dataType: 'json',
         loadingIndicator: $.proxy(self._itemLoadingIndicator, self),
         success: function (pData) {
+          self._disableChangeEvent = false
           self._returnValue = pData.returnValue
           self._item$.val(pData.displayValue)
-        },
-        error: function (pData) {
-          // Throw an error
-          throw Error('Modal LOV item value count not be set')
+          self._item$.trigger('change')
         }
       })
+
+      promise
+        .done(function (pData) {
+          self._returnValue = pData.returnValue
+          self._item$.val(pData.displayValue)
+          self._item$.trigger('change')
+        })
+        .always(function () {
+          self._disableChangeEvent = false
+        })
     },
 
     _initApexItem: function () {
@@ -710,17 +720,21 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
           self._item$.hide()
           self._searchButton$.hide()
         },
+
         setValue: function (pValue, pDisplayValue, pSuppressChangeEvent) {
           if (pDisplayValue || !pValue || pValue.length === 0) {
+            // Assuming no check is needed to see if the value is in the LOV
             self._item$.val(pDisplayValue)
             self._returnValue = pValue
           } else {
             self._item$.val(pDisplayValue)
+            self._disableChangeEvent = true
             self._setValueBasedOnDisplay(pValue)
           }
         },
         getValue: function () {
-          return self._returnValue
+          // Always return at least an empty string
+          return self._returnValue || ''
         },
         isChanged: function () {
           return document.getElementById(self.options.itemName).value !== document.getElementById(self.options.itemName).defaultValue
@@ -729,25 +743,14 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       apex.item(self.options.itemName).callbacks.displayValueFor = function () {
         return self._item$.val()
       }
-      // apex.item(self.options.itemName).callbacks.getValidity = function () {
-      //   var empty = self._returnValue.length === 0
-      //   if (empty && document.getElementById(self.options.itemName).required) {
-      //     setTimeout(function () {
-      //       apex.message.showErrors([
-      //         {
-      //           message: document.getElementById(self.options.itemName).validationMessage,
-      //           location: 'inline',
-      //           pageItem: self.options.itemName
-      //         }
-      //       ])
-      //     }, 0)
-      //   }
-      //   var validity = {
-      //     valid: !empty,
-      //     valueMissing: empty
-      //   }
-      //   return validity
-      // }
+
+      // Only trigger the change event after the Async callback if needed
+      self._item$['trigger'] = function (type, data) {
+        if (type === 'change' && self._disableChangeEvent) {
+          return
+        }
+        $.fn.trigger.call(self._item$, type, data)
+      }
     },
 
     _itemLoadingIndicator: function (loadingIndicator) {
