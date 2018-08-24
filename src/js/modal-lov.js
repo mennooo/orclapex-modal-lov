@@ -187,7 +187,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         },
         close: function () {
           self._topApex.navigation.endFreezeScroll()
-          // Stop edit mode of possible IG
+          self._resetFocus()
         }
       })
     },
@@ -362,7 +362,11 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
       settings = $.extend(settings, options)
       var searchTerm = (settings.searchTerm.length > 0) ? settings.searchTerm : self._topApex.item(self.options.searchField).getValue()
-      var items = self.options.pageItemsToSubmit
+      var items = [self.options.pageItemsToSubmit, self.options.cascadingItems]
+        .filter(function (selector) {
+          return (selector)
+        })
+        .join(',')
 
       // Store last searchTerm
       self._lastSearchTerm = searchTerm
@@ -625,9 +629,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
       // Finally hide the modal
       self._modalDialog$.dialog('close')
-
-      // And focus on input but not for IG column item
-      self._resetFocus()
     },
 
     _onRowSelected: function () {
