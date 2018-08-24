@@ -57,7 +57,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _ig$: null,
     _grid: null,
 
-    _topApex: apex.util.getTopApex(),
+    _topApex: null,
 
     _resetFocus: function () {
       var self = this
@@ -91,6 +91,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._returnValue = self._item$.data('returnValue').toString()
       self._searchButton$ = $('#' + self.options.searchButton)
       self._clearInput$ = self._item$.parent().find('.search-clear')
+      self._topApex = apex.util.getTopApex()
 
       self._addCSSToTopLevel()
 
