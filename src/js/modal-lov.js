@@ -57,7 +57,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
     _ig$: null,
     _grid: null,
 
-    _topApex: null,
+    _topApex: apex.util.getTopApex(),
 
     _resetFocus: function () {
       var self = this
@@ -66,7 +66,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
         var column = this._ig$.interactiveGrid('option').config.columns.filter(function (column) {
           return column.staticId === self.options.itemName
         })[0]
-        this._grid.setEditMode(false)
         this._grid.view$.grid('gotoCell', recordId, column.name)
         this._grid.focus()
       } else {
@@ -91,7 +90,6 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._returnValue = self._item$.data('returnValue').toString()
       self._searchButton$ = $('#' + self.options.searchButton)
       self._clearInput$ = self._item$.parent().find('.search-clear')
-      self._topApex = apex.util.getTopApex()
 
       self._addCSSToTopLevel()
 
@@ -120,7 +118,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
       self._removeValidation()
       // Add text from display field
       if (options.fillSearchText) {
-        self._topApex.apex.item(self.options.searchField).setValue(self._item$.val())
+        self._topApex.item(self.options.searchField).setValue(self._item$.val())
       }
       // Add class on hover
       self._onRowHover()
