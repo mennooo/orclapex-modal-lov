@@ -662,7 +662,7 @@ Handlebars.registerPartial('pagination', require('./templates/partials/_paginati
 
     _initCascadingLOVs: function () {
       var self = this
-      self._topApex.jQuery(self.options.cascadingItems).on('change', function () {
+      $(self.options.cascadingItems).on('change', function () {
         self._clearInput()
       })
     },
