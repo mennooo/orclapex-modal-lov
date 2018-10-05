@@ -245,7 +245,7 @@ wwv_flow_api.create_plugin(
 '    , p_min_columns       => 2',
 '    , p_max_columns       => 2',
 '    , p_component_name    => null',
-'    , p_search_type       => apex_plugin_util.c_search_exact_case',
+'    , p_search_type       => apex_plugin_util.c_search_lookup',
 '    , p_search_column_no  => 2',
 '    , p_search_string     => p_return_val',
 '  );',
