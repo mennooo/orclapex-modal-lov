@@ -1,6 +1,8 @@
 # orclapex-modal-lov
 A modal LOV item plug-in for Oracle APEX that works in the Interactive Grid.
 
+**There was an issue where you could see the wrong display value. This is fixed in version 1.3.2 and you should not use earlier versions.**
+
 Page Item
 
 <img src="https://github.com/mennooo/orclapex-modal-lov/blob/master/preview.gif" width="700px">
