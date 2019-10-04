@@ -1,3 +1,5 @@
+# This project is not maintained anymore by me due to the lack of time for support. I'm happy to change ownership if someone is interested. Please use the new native Popup LOV in APEX 19.2 and onwards.
+
 # orclapex-modal-lov
 A modal LOV item plug-in for Oracle APEX that works in the Interactive Grid.
 
